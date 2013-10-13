@@ -57,6 +57,14 @@ void* calloc(size_t n, size_t size)
     recuirsion_guard rg;
 
     void* p = internal_alloc(n * size, DEFAULT_ALIGNMENT);
+
+    if(p != NULL){
+        void* end = p+n*size;
+        for(void* i = p; i < end; ++i){
+            *i = 0;
+        }
+    }
+
     trace("calloc ", n, " ", size, " ", p, "\n");
 
     return p;
