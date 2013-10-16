@@ -40,10 +40,6 @@ namespace
         return blk;
     }
 
-    bool is_power_of_2(size_t n)
-    {
-        return ((n != 0) && !(n & (n - 1))); 
-    }
 }
 
 void* malloc_intercept::internal_alloc(size_t size, size_t alignment)
