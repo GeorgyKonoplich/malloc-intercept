@@ -6,30 +6,26 @@
 
 #include <cerrno>
 
-#include "internals.h"
+#include "allocator.h"
 #include "tracing.h"
 
-using namespace malloc_intercept;
+using namespace ghoard;
 
-namespace
-{
+namespace {
     __thread bool inside_malloc = false;
 
-    struct recuirsion_guard
-    {
-        recuirsion_guard()
-        {
-            if (inside_malloc)
-            {
+    struct recuirsion_guard {
+
+        recuirsion_guard() {
+            if (inside_malloc) {
                 print("recuirsive call\n");
                 std::abort();
             }
-            
+
             inside_malloc = true;
         }
 
-        ~recuirsion_guard()
-        {
+        ~recuirsion_guard() {
             inside_malloc = false;
         }
 
@@ -37,30 +33,28 @@ namespace
         recuirsion_guard(recuirsion_guard const&);
         recuirsion_guard& operator=(recuirsion_guard const&);
     };
+    allocator allocator_instance;
 }
 
-
 extern "C"
-void* malloc(size_t size)
-{
+void* malloc(size_t size) {
     recuirsion_guard rg;
-    
-    void *p = internal_alloc(size, DEFAULT_ALIGNMENT);
+
+    void *p = allocator_instance.allocate(size);
     trace("malloc ", size, " ", p, "\n");
 
     return p;
 }
 
 extern "C"
-void* calloc(size_t n, size_t size)
-{
+void* calloc(size_t n, size_t size) {
     recuirsion_guard rg;
 
-    void* p = internal_alloc(n * size, DEFAULT_ALIGNMENT);
+    void* p = allocator_instance.allocate(n * size);
 
-    if(p != NULL){
-        void* end = p+n*size;
-        for(void* i = p; i < end; ++i){
+    if (p != NULL) {
+        char* end = (char*) p + n*size;
+        for (char* i = (char*) p; i < end; ++i) {
             *i = 0;
         }
     }
@@ -71,28 +65,25 @@ void* calloc(size_t n, size_t size)
 }
 
 extern "C"
-void free(void *ptr)
-{
+void free(void *ptr) {
     recuirsion_guard rg;
 
-    internal_free(ptr);
+    allocator_instance.deallocate(ptr);
     trace("free ", ptr, "\n");
 }
 
 extern "C"
-void* realloc(void *ptr, size_t size)
-{
+void* realloc(void *ptr, size_t size) {
     recuirsion_guard rg;
 
-    void* p = internal_realloc(ptr, size);
+    void* p = allocator_instance.reallocate(ptr, size);
     trace("realloc ", ptr, " ", size, " ", p, "\n");
 
     return p;
 }
 
 extern "C"
-int posix_memalign(void** memptr, size_t alignment, size_t size)
-{
+int posix_memalign(void** memptr, size_t alignment, size_t size) {
     recuirsion_guard rg;
 
     *memptr = 0;
@@ -100,7 +91,7 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
     if (!is_valid_alignment(alignment))
         return EINVAL;
 
-    void* p = internal_alloc(size, alignment);
+    void* p = allocator_instance.allocate(size, alignment);
 
     trace("posix_memalign ", alignment, " ", size, " ", p, "\n");
 
@@ -113,8 +104,7 @@ int posix_memalign(void** memptr, size_t alignment, size_t size)
 }
 
 extern "C"
-void *valloc(size_t size)
-{
+void *valloc(size_t size) {
     recuirsion_guard rg;
 
     print("deprecated function valloc is not supported\n");
@@ -122,8 +112,7 @@ void *valloc(size_t size)
 }
 
 extern "C"
-void *memalign(size_t boundary, size_t size)
-{
+void *memalign(size_t boundary, size_t size) {
     recuirsion_guard rg;
 
     print("deprecated function memalign is not supported\n");

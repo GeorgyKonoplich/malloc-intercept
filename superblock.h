@@ -8,25 +8,28 @@
 
 using namespace std;
 
-namespace ghoard{
+namespace ghoard {
     struct heap;
     struct superblock;
 
-    struct large_block{
-        size_t block_size;
+    struct large_block {
+        size_t total_size;
         size_t indent;
         superblock * parent;
     };
-    struct ordinary_block{
+
+    struct ordinary_block {
         size_t indent;
         superblock * parent;
-    }; 
-    struct empty_block{
+    };
+
+    struct empty_block {
         empty_block * next;
     };
 
-    struct superblock
-    {
+    struct superblock {
+        friend class heap;
+    private:
         heap * parent;
         int sz_group;
         size_t free_block_cnt;
@@ -40,11 +43,21 @@ namespace ghoard{
         size_t get_block_count();
         void * get_data_start();
         void initialize_blocks();
-        bool has_free_blocks();
-        void * get_free_block();
-        void return_block_to_stack(void * block);
+        void * pop_free_block();
+        void push_free_block(void * block);
         int get_fgroup_id();
+        mutex_lock mutex;
+
+    public:
+        bool has_free_blocks();
+        bool is_empty();
+        heap * get_parent();
+        void lock();
+        void unlock();
+        int get_sz_group();
     };
-}
+
+    size_t get_size(void * ptr) {
+    }
 
 #endif
