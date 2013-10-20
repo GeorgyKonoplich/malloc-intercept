@@ -58,7 +58,6 @@ namespace ghoard {
         int get_sz_group();
     };
 
-    size_t get_size(void * ptr) {
-    }
-
+    size_t get_size(void * ptr);
+}
 #endif

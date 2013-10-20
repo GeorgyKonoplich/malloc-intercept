@@ -52,6 +52,6 @@ void ghoard::print() {
 }
 
 bool ghoard::trace_enabled() {
-    static bool enabled = (getenv("ghoard_NO_TRACE") == NULL);
+    static bool enabled = (getenv("ghoard_trace") != NULL);
     return enabled;
 }

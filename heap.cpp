@@ -25,11 +25,11 @@ bool ghoard::heap::is_threshold_passed() {
             > F_THRESHOLD_NUMERATOR * available_bytes);
 }
 
-superblock ** ghoard::heap::get_sz_head(int fid, int size_group) {
+ghoard::superblock ** ghoard::heap::get_sz_head(int fid, int size_group) {
     return sz_heads + fid * SZ_CNT + size_group;
 }
 
-superblock * ghoard::heap::get_deletion_candidate() {
+ghoard::superblock * ghoard::heap::get_deletion_candidate() {
     if (is_threshold_passed())
         for (int fid = 0; fid < FGROUP_COUNT; ++fid) {
             if (fgroup_heads[fid] != NULL) return fgroup_heads[fid];
