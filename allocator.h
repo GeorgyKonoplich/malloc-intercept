@@ -13,7 +13,7 @@ using namespace std;
 namespace ghoard {
     const int HEAP_CNT = get_processor_count()*2;
 
-    struct allocator {
+    class allocator {
     private:
 
         struct heap_holder_cls {

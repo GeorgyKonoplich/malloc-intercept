@@ -12,7 +12,7 @@ using namespace std;
 
 namespace ghoard {
 
-    struct heap {
+    class heap {
     private:
         size_t used_bytes;
         size_t available_bytes;

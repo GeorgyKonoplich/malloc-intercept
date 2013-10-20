@@ -16,7 +16,7 @@ namespace ghoard {
     void raw_deallocate(void * start_address, size_t total_size);
     int get_processor_count();
 
-    struct mutex_lock {
+    class mutex_lock {
     private:
         pthread_mutex_t mutex;
 

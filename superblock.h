@@ -6,11 +6,12 @@
 #include <sys/mman.h>
 #include <cstddef>
 
+
 using namespace std;
 
 namespace ghoard {
-    struct heap;
-    struct superblock;
+    class heap;
+    class superblock;
 
     struct large_block {
         size_t total_size;
@@ -27,7 +28,7 @@ namespace ghoard {
         empty_block * next;
     };
 
-    struct superblock {
+    class superblock {
         friend class heap;
     private:
         heap * parent;
