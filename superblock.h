@@ -39,7 +39,6 @@ namespace ghoard {
         superblock * szprev;
         superblock * sznext;
         empty_block * stack_head;
-        size_t get_block_with_meta_sz();
         void set_list_pointers_to_null();
         size_t get_block_count();
         void * get_data_start();
@@ -50,6 +49,7 @@ namespace ghoard {
         mutex_lock mutex;
 
     public:
+        size_t get_block_with_meta_sz();
         bool has_free_blocks();
         bool is_empty();
         heap * get_parent();

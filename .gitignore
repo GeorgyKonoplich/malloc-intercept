@@ -1,4 +1,6 @@
-.*.un~
+*.*.un~
 *.o
-.*.swp
+*.swp
+.swp
 *.gch
+*.so

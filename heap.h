@@ -21,14 +21,14 @@ namespace ghoard {
         mutex_lock mutex;
         bool is_threshold_passed();
         superblock ** get_sz_head(int fid, int size_group);
-        void insert_superblock_into_list(superblock * sb, superblock ** head);
 
     public:
+        void print_debug();
         void create_add_superblock(void * bytes, int sz_group);
+        void resize_superblock(superblock * sb, int sz_group);
         superblock * get_deletion_candidate();
         void remove_superblock(superblock * sb);
         void insert_superblock(superblock * sb);
-        void reinsert_superblock(superblock * sb);
         superblock * get_superblock_with_free_block(int sz_group);
         void push_free_block(void * block, superblock * sb);
         void * pop_free_block(superblock* sb);

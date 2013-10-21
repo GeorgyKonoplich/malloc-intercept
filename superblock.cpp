@@ -15,7 +15,7 @@ size_t ghoard::superblock::get_block_count() {
 }
 
 void * ghoard::superblock::get_data_start() {
-    return ((char*) this +sizeof (superblock));
+    return ((char*) this + sizeof (superblock));
 }
 
 void ghoard::superblock::initialize_blocks() {
@@ -30,7 +30,7 @@ void ghoard::superblock::initialize_blocks() {
 }
 
 bool ghoard::superblock::has_free_blocks() {
-    return stack_head == NULL;
+    return stack_head != NULL;
 }
 
 void * ghoard::superblock::pop_free_block() {
@@ -48,7 +48,8 @@ void ghoard::superblock::push_free_block(void * block) {
 }
 
 int ghoard::superblock::get_fgroup_id() {
-    return (get_block_count() - free_block_cnt)*(FGROUP_COUNT - 1) / get_block_count();
+    if(is_empty()) return 0;
+    return 1 + (get_block_count() - free_block_cnt)*(FGROUP_COUNT - 2) / get_block_count();
 }
 
 void ghoard::superblock::set_list_pointers_to_null() {

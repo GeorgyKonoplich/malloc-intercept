@@ -30,6 +30,7 @@ namespace ghoard {
         void * allocate(size_t size, size_t alignment = DEFAULT_ALIGNMENT);
         void deallocate(void * ptr);
         void * reallocate(void * ptr, size_t size);
+        void print_debug();
     };
 }
 
