@@ -12,6 +12,9 @@
 // support of signed types.
 
 namespace ghoard {
+
+    const bool TRACE_ENABLED = getenv("GHOARD_TRACE") != NULL;
+
     void print_object(char const*);
     void print_object(void* px);
     void print_object(size_t n);
@@ -24,14 +27,10 @@ namespace ghoard {
         print(objs...);
     }
 
-    bool trace_enabled();
-
     template <typename ... Ts>
     void trace(Ts ... objs) {
-        if (!trace_enabled())
+        if (!TRACE_ENABLED)
             return;
-
-
         print(objs...);
     }
 }

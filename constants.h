@@ -11,6 +11,9 @@ using namespace std;
 
 namespace ghoard {
 
+    const int HEAP_CNT_LOG = log2_ceil(get_processor_count()*2);
+    const int HEAP_CNT = 1<<HEAP_CNT_LOG;
+
     const size_t DEFAULT_ALIGNMENT = 8;
     const size_t K_THRESHOLD = 10;
     const unsigned long long F_THRESHOLD_NUMERATOR = 1;

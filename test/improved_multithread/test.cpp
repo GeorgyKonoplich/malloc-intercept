@@ -10,10 +10,10 @@ using namespace std;
 
 ghoard::allocator ghoard_allocator;
 
-const int RETRY_CNT = 2000;
+const int RETRY_CNT = 50;
 const int MIN_BLOCK_SIZE_LOG = 5;
 const int MAX_BLOCK_SIZE_LOG = 14; 
-const int THREAD_CNT = 8;
+const int THREAD_CNT = 108;
 
 const int PTRS_SIZE = (MAX_BLOCK_SIZE_LOG-MIN_BLOCK_SIZE_LOG+1)*RETRY_CNT;
 void * pointers[PTRS_SIZE*THREAD_CNT];

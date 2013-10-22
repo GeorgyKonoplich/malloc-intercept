@@ -19,13 +19,15 @@ namespace ghoard {
     class mutex_lock {
     private:
         pthread_mutex_t mutex;
+//        bool in_use;
 
     public:
         void init();
         void lock();
         void unlock();
     };
-    size_t get_current_thread_id();
+    int get_current_thread_id();
+    int get_current_thread_id(int mod_log);
     bool is_valid_alignment(size_t alignment);
 };
 

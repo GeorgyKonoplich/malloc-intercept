@@ -68,8 +68,8 @@ extern "C"
 void free(void *ptr) {
     recuirsion_guard rg;
 
-    allocator_instance.deallocate(ptr);
     trace("free ", ptr, "\n");
+    allocator_instance.deallocate(ptr);
 }
 
 extern "C"

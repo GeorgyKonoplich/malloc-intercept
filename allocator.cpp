@@ -9,7 +9,7 @@
 #include <cstring>
 #include "tracing.h"
 
-static const bool PRINT_ALLOCATOR_TRACE = 0;
+static const bool PRINT_ALLOCATOR_TRACE = 1;
 
 void ghoard::allocator::trace_debug(){
     trace("[Allocator]\n");
@@ -43,7 +43,7 @@ bool ghoard::allocator::is_empty(){
 
 void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
     if(PRINT_ALLOCATOR_TRACE) trace("allocator.allocate(",data_size, ", ", alignment, ")\n");
-    size_t ordinary_size = get_acceptable_block_size(data_size, sizeof (ordinary_block), alignment);
+    size_t ordinary_size = data_size + sizeof(ordinary_block) + alignment - 1;
     if (ordinary_size > BIG_SZ_MAX) {
         return allocate_large_block(data_size, alignment);
     }
@@ -58,9 +58,7 @@ void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
         sb = global_heap->get_superblock_with_free_block(sz_group);
         if (sb == NULL) {
             if(PRINT_ALLOCATOR_TRACE) trace("No free superblocks in global heap\n");
-
             global_heap->unlock();
-            if(PRINT_ALLOCATOR_TRACE) trace("global heap unlocked\n");
             void * raw_ptr = raw_allocate(SUPERBLOCK_SIZE);
             if(raw_ptr == NULL) {
                 current_heap->unlock();
@@ -88,12 +86,8 @@ void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
     return ++ob;
 }
 
-size_t ghoard::allocator::get_acceptable_block_size(size_t data_size, size_t meta_size, size_t alignment) {
-    return data_size + meta_size + alignment - 1;
-}
-
-void * ghoard::allocator::allocate_large_block(size_t data_size, size_t alignment = DEFAULT_ALIGNMENT) {
-    size_t total_size = get_acceptable_block_size(data_size, sizeof (large_block), alignment);
+void * ghoard::allocator::allocate_large_block(size_t data_size, size_t alignment) {
+    size_t total_size = data_size + sizeof(large_block) + alignment - 1;
     void * raw_ptr = raw_allocate(total_size);
     if(raw_ptr == NULL){
         return NULL;
@@ -109,6 +103,7 @@ void * ghoard::allocator::allocate_large_block(size_t data_size, size_t alignmen
 
 void ghoard::allocator::deallocate(void * ptr) {
     if(PRINT_ALLOCATOR_TRACE) trace("allocator.deallocate(", ptr, ")\n");
+    if(ptr == NULL) return;
     ordinary_block* ob = (ordinary_block*) ((char*) ptr - sizeof (ordinary_block));
     superblock * sb = ob->parent;
     if (sb == NULL) {
@@ -130,12 +125,11 @@ void ghoard::allocator::deallocate(void * ptr) {
                 global_heap->insert_superblock(deletion_candidate);
                 global_heap->unlock();
             }else if(RETURN_SUPERBLOCKS && deletion_candidate->is_empty()){
-                global_heap->remove_superblock(sb);
+                parent_heap->remove_superblock(sb);
                 raw_deallocate(sb, SUPERBLOCK_SIZE);
             }
         }
         parent_heap->unlock();
-
         sb->unlock();
     }
 }
@@ -145,8 +139,7 @@ ghoard::heap * ghoard::allocator::get_global_heap() {
 }
 
 ghoard::heap * ghoard::allocator::get_current_heap() {
-    int id = (int) get_current_thread_id() % HEAP_CNT + 1;
-    return heap_holder.get_heap(id);
+    return heap_holder.get_heap(get_current_thread_id() + 1);
 }
 
 void * ghoard::allocator::reallocate(void * ptr, size_t size) {

@@ -11,7 +11,6 @@
 using namespace std;
 
 namespace ghoard {
-    const int HEAP_CNT = get_processor_count()*2;
 
     class allocator {
     private:
@@ -22,10 +21,9 @@ namespace ghoard {
             heap * get_heap(int i);
             ~heap_holder_cls();
         } heap_holder;
-        size_t get_acceptable_block_size(size_t data_size, size_t meta_size, size_t alignment);
         heap * get_current_heap();
         heap * get_global_heap();
-        void * allocate_large_block(size_t data_size, size_t alignment);
+        static void * allocate_large_block(size_t data_size, size_t alignment = DEFAULT_ALIGNMENT);
 
     public:
         void * allocate(size_t size, size_t alignment = DEFAULT_ALIGNMENT);
