@@ -5,16 +5,18 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <cstddef>
+#include <cstdlib>
 
 using namespace std;
 
 namespace ghoard {
 
-    const size_t K_THRESHOLD = 10;
     const size_t DEFAULT_ALIGNMENT = 8;
-
+    const size_t K_THRESHOLD = 10;
     const unsigned long long F_THRESHOLD_NUMERATOR = 1;
     const unsigned long long F_THRESHOLD_DENOMINATOR = 4;
+
+    const bool RETURN_SUPERBLOCKS = getenv("GHOARD_RETURN_SUPERBLOCKS") != NULL;
 
     const size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
     const size_t SUPERBLOCK_SIZE = 16 * PAGE_SIZE;

@@ -20,6 +20,7 @@ namespace ghoard {
             heap * heaps;
             heap_holder_cls();
             heap * get_heap(int i);
+            ~heap_holder_cls();
         } heap_holder;
         size_t get_acceptable_block_size(size_t data_size, size_t meta_size, size_t alignment);
         heap * get_current_heap();
@@ -30,7 +31,8 @@ namespace ghoard {
         void * allocate(size_t size, size_t alignment = DEFAULT_ALIGNMENT);
         void deallocate(void * ptr);
         void * reallocate(void * ptr, size_t size);
-        void print_debug();
+        void trace_debug();
+        bool is_empty();
     };
 }
 

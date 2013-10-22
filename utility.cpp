@@ -1,5 +1,6 @@
 #include "utility.h"
 #include "constants.h"
+#include "tracing.h"
 #include <cstddef>
 #include <cassert>
 #include <pthread.h>
@@ -49,16 +50,24 @@ namespace ghoard {
         munmap(start_address, total_size);
     }
 
+    static const bool PRINT_MUTEX_TRACE = false;
+
     void mutex_lock::init() {
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::init() -- start\n");
         pthread_mutex_init(&mutex, NULL);
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::init() -- finish\n");
     }
 
     void mutex_lock::lock() {
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::lock() -- start\n");
         pthread_mutex_lock(&mutex);
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::lock() -- finish\n");
     }
 
     void mutex_lock::unlock() {
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::unlock() -- start\n");
         pthread_mutex_unlock(&mutex);
+        if(PRINT_MUTEX_TRACE) trace("mutex_lock::unlock() -- finish\n");
     }
 
     int get_processor_count() {

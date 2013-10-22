@@ -23,7 +23,7 @@ namespace ghoard {
         superblock ** get_sz_head(int fid, int size_group);
 
     public:
-        void print_debug();
+        void trace_debug();
         void create_add_superblock(void * bytes, int sz_group);
         void resize_superblock(superblock * sb, int sz_group);
         superblock * get_deletion_candidate();
@@ -35,6 +35,9 @@ namespace ghoard {
         void lock();
         void unlock();
         void init();
+        void deallocate_all_superblocks();
+        int get_available_bytes();
+        int get_used_bytes();
     };
     const size_t HEAP_SIZE = sizeof (heap) + sizeof (superblock*) * SZ_CNT*FGROUP_COUNT;
 

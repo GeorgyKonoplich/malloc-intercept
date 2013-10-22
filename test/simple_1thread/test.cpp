@@ -9,26 +9,30 @@ using namespace std;
 ghoard::allocator allocator;
 
 const int RETRY_CNT = 20000;
+const int max_block_size = 50*1024;
 
 void test_1(){
     printf("test_1() started\n");
     void ** ptrs = (void**)malloc(sizeof(void*)*RETRY_CNT);
-    for(size_t block_size = 8; block_size < 1024*256; block_size <<= 1){
-//        printf("--------- Block size %lu\n", block_size);
-        for(int i=0; i < RETRY_CNT; ++i){
-//            printf("Retry: %d\n", i);
+    for(size_t block_size = 8; block_size < max_block_size; block_size <<= 1){
+        int i;
+        for(i=0; i < RETRY_CNT; ++i){
             ptrs[i] = allocator.allocate(block_size);
-  //          allocator.print_debug();
+            if(ptrs[i] == NULL){
+                printf("NULL ptr returned by allocate\n");
+                break;
+            }
         }
-       //allocator.print_debug();
-        for(int i=0; i < RETRY_CNT; ++i){
-            allocator.deallocate(ptrs[i]);
+        for(; i >= 0; --i){
+            if(ptrs[i] != NULL) allocator.deallocate(ptrs[i]);
         }
     }
-    allocator.print_debug();
+    if(!allocator.is_empty()){
+        fprintf(stderr, "allocator isn't empty!\n");
+        std::abort();
+    }
     printf("test_1() finished\n");
 }
-
 
 int main(){
     test_1();
