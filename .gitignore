@@ -1,6 +1,7 @@
 run_benchmark
 /benchmark_results.txt
 /profile.dot
+/profile-results
 run_test
 *.*.un~
 *.o

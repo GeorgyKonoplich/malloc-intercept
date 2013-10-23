@@ -6,6 +6,7 @@ no_tcompile=0
 no_bcompile=0
 no_tests=0
 no_benchmarks=0
+no_standart_benchmark=0
 enable_tracing=0
 
 for arg in $@ ; do
@@ -23,6 +24,9 @@ for arg in $@ ; do
     fi
     if [ "$arg" = "-nb" ]; then
         no_benchmarks=1
+    fi
+    if [ "$arg" = "-nsb" ]; then
+        no_standart_benchmark=1
     fi
     if [ "$arg" = "-et" ]; then
         enable_tracing=1
@@ -69,27 +73,54 @@ if [ $no_benchmarks = 0 ]; then
         if [ $no_compile = 0 ]; then
             echo "--- Building ghoard .so's"
             ./build.sh release
+            if [ ! -f Hoard_by_author/libhoard.so ]; then
+                cd Hoard_by_author
+                make linux-gcc-x86-64
+                cd ..
+            fi
         fi
     fi
-    find ./benchmark -type d|while read dir; do
+    find -L ./benchmark -type d|while read dir; do
     if [ ! "$dir" = "./benchmark" ]; then
         first_char=$(basename "$dir"|cut -c1)
         if [ ! $first_char = '_' ]; then
-            echo "------ Benchmark from $dir" | tee -a benchmark_results.txt
             files=$(ls "$dir"|grep -E '\.(h|cpp)$'|while read f; do echo "$dir/$f"; done)
             if [ ! "$files" = '' ]; then
-                executable="$dir/run_benchmark"
-                if [ $no_bcompile = 0 ]; then
-                    g++ -std=c++0x -fPIC -O2 -o "$executable" $files -lpthread
+                if [ -f "$dir/Makefile" ]; then
+                    $files = '-'
                 fi
-                if [ -f "$executable" ]; then
-                    full_path_to_so=$(pwd)/dist/release/libghoard.so
+            fi
+            if [ -f "$dir/Makefile" ]; then
+                if [ $no_bcompile = 0 ]; then
+                    _d=$(pwd)
+                    cd "$dir"
+                    make 2>&1 > /dev/null
+                    cd "$_d"
+                fi
+                executable="$dir/$(basename "$dir")"
+            else
+                if [ -f "$dir/main.cpp" ]; then
+                    executable="$dir/run_benchmark"
+                    if [ $no_bcompile = 0 ]; then
+                        g++ -std=c++0x -fPIC -O2 -o "$executable" $files -lpthread
+                    fi
+                fi
+            fi
+            if [ -f "$executable" ]; then
+                echo "------ Benchmark from $dir" | tee -a benchmark_results.txt
+                full_path_to_so=$(pwd)/dist/release/libghoard.so
+                T="$(date +%s%N)"
+                LD_PRELOAD="$full_path_to_so" "$executable" 2>&1 >/dev/null
+                M="$((($(date +%s%N)-T)/1000000))"
+                echo "Hoard: $M millis" | tee -a benchmark_results.txt
+                full_path_to_hoard_by_author_so=$(pwd)/dist/release/libghoard.so
+                T="$(date +%s%N)"
+                LD_PRELOAD="$full_path_to_hoard_by_author_so" "$executable" 2>&1 >/dev/null
+                M="$((($(date +%s%N)-T)/1000000))"
+                echo "Hoard by author: $M millis" | tee -a benchmark_results.txt
+                if [ $no_standart_benchmark = 0 ]; then
                     T="$(date +%s%N)"
-                    LD_PRELOAD="$full_path_to_so" "$executable"
-                    M="$((($(date +%s%N)-T)/1000000))"
-                    echo "Hoard: $M millis" | tee -a benchmark_results.txt
-                    T="$(date +%s%N)"
-                    "$executable"
+                    "$executable" 2>&1 >/dev/null
                     M="$((($(date +%s%N)-T)/1000000))"
                     echo "Standart: $M millis" | tee -a benchmark_results.txt
                 fi

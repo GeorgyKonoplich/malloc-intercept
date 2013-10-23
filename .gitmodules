@@ -1,0 +1,6 @@
+[submodule "Hoard_by_author"]
+	path = Hoard_by_author
+	url = git@github.com:emeryberger/Hoard.git
+[submodule "benchmark/sorokin-malloc-testing"]
+	path = benchmark/sorokin-malloc-testing
+	url = git@github.com:sorokin/malloc-testing.git
