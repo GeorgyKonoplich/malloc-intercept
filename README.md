@@ -1,6 +1,6 @@
 #GHoard - Hoard allocator implementation
 
-Run ```./build.sh``` to build .so
+Run ```./build.sh release``` to build .so
 
 Run ```./test.sh -nt``` to build .so and run benchmarks
 
