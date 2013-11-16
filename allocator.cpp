@@ -13,13 +13,26 @@ static const bool PRINT_ALLOCATOR_TRACE = 1;
 
 void ghoard::allocator::trace_debug(){
     trace("[Allocator]\n");
-    for(int i=0; i<HEAP_CNT+1; ++i) heap_holder.get_heap(i)->trace_debug();
+    heap * global_heap = get_global_heap();
+    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap (", global_heap, ") used bytes=", global_heap->get_used_bytes(), "\n");
+    //if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap (", global_heap, ")\n");
+    //global_heap->trace_debug();
+    //for(int i=0; i<HEAP_CNT+1; ++i) C
+}
+
+ghoard::allocator::allocator(){
+    heap * global_heap = get_global_heap();
+    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap used bytes=", global_heap->get_used_bytes(), "\n");
+    //if(PRINT_ALLOCATOR_TRACE) 
+        //trace_debug();
 }
 
 ghoard::allocator::heap_holder_cls::heap_holder_cls() {
+    if(PRINT_ALLOCATOR_TRACE) trace("Initializing heap holder -- begin\n");
     void * ptr = raw_allocate(HEAP_SIZE * (1 + HEAP_CNT));
     heaps = (heap*) ptr;
     for (int i = 0; i < HEAP_CNT+1; ++i) get_heap(i)->init();
+    if(PRINT_ALLOCATOR_TRACE) trace("Initializing heap holder -- end\n");
 }
 
 ghoard::allocator::heap_holder_cls::~heap_holder_cls(){
@@ -43,13 +56,17 @@ bool ghoard::allocator::is_empty(){
 
 void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
     if(PRINT_ALLOCATOR_TRACE) trace("allocator.allocate(",data_size, ", ", alignment, ")\n");
+    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, "\n");
+    if(PRINT_ALLOCATOR_TRACE) trace_debug();
     size_t ordinary_size = data_size + sizeof(ordinary_block) + alignment - 1;
     if (ordinary_size > BIG_SZ_MAX) {
         return allocate_large_block(data_size, alignment);
     }
     int sz_group = get_sz_group(ordinary_size);
     heap * global_heap = get_global_heap();
+    global_heap->check_magick();
     heap * current_heap = get_current_heap();
+    current_heap->check_magick();
     current_heap->lock();
     superblock * sb = current_heap->get_superblock_with_free_block(sz_group);
     if (sb == NULL) {
@@ -67,6 +84,7 @@ void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
             sb = (superblock*) raw_ptr;
             current_heap->create_add_superblock(sb, sz_group);
         } else {
+            sb->check_magick();
             global_heap->remove_superblock(sb);
             global_heap->unlock();
             if (sb->is_empty() && sb->get_sz_group() != sz_group) {
@@ -75,8 +93,11 @@ void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
                 current_heap->insert_superblock(sb);
             }
         }
-    }else if(sb->is_empty() && sb->get_sz_group() != sz_group)
-        current_heap->resize_superblock(sb, sz_group);
+    }else{
+        sb->check_magick();
+        if(sb->is_empty() && sb->get_sz_group() != sz_group)
+            current_heap->resize_superblock(sb, sz_group);
+    }
     void * raw_ptr = current_heap->pop_free_block(sb);
     current_heap->unlock();
     size_t indent = alignment - ((size_t) raw_ptr + sizeof (ordinary_block)) % alignment;
@@ -112,12 +133,15 @@ void ghoard::allocator::deallocate(void * ptr) {
         if(PRINT_ALLOCATOR_TRACE) trace("deallocating large block ", ptr," ", lb->total_size, "\n");
         raw_deallocate(ptr, lb->total_size);
     } else {
+        sb->check_magick();
         sb->lock();
         heap * parent_heap = sb->get_parent();
+        parent_heap->check_magick();
         parent_heap->lock();
         parent_heap->push_free_block((char*) ob - ob->indent, sb);
         superblock * deletion_candidate = parent_heap->get_deletion_candidate();
         heap * global_heap = get_global_heap();
+        global_heap->check_magick();
         if (deletion_candidate != NULL) {
             if(parent_heap != global_heap){
                 parent_heap->remove_superblock(deletion_candidate);
@@ -144,9 +168,11 @@ ghoard::heap * ghoard::allocator::get_current_heap() {
 
 void * ghoard::allocator::reallocate(void * ptr, size_t size) {
     void * new_ptr = allocate(size);
-    size_t old_size = get_size(ptr);
-    memcpy(new_ptr, ptr, size < old_size ? size : old_size);
-    deallocate(ptr);
+    if(ptr != NULL){
+        size_t old_size = get_size(ptr);
+        memcpy(new_ptr, ptr, size < old_size ? size : old_size);
+        deallocate(ptr);
+    }
     return new_ptr;
 }
 

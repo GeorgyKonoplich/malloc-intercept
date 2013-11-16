@@ -11,6 +11,7 @@
 using namespace std;
 
 namespace ghoard {
+    const int HEAP_MAGICK = 0x319fce20;
 
     class heap {
     private:
@@ -19,10 +20,12 @@ namespace ghoard {
         superblock * fgroup_heads[FGROUP_COUNT];
         superblock** sz_heads;
         mutex_lock mutex;
+        int magick; 
         bool is_threshold_passed();
         superblock ** get_sz_head(int fid, int size_group);
 
     public:
+        void check_magick();
         void trace_debug();
         void create_add_superblock(void * bytes, int sz_group);
         void resize_superblock(superblock * sb, int sz_group);

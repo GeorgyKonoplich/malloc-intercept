@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <cassert>
 #include "utility.h"
+#include "tracing.h"
 
 size_t ghoard::superblock::get_block_with_meta_sz() {
     return block_with_meta_sz;
@@ -14,7 +15,15 @@ size_t ghoard::superblock::get_block_count() {
     return block_count;
 }
 
+void ghoard::superblock::check_magick(){
+    if(magick != SUPERBLOCK_MAGICK){
+        print("Bad magick in superblock ", this, "\n");
+        std::abort();
+    }
+}
+
 void ghoard::superblock::init() {
+    magick = SUPERBLOCK_MAGICK;
     block_with_meta_sz = get_block_size(sz_group) + sizeof (ordinary_block);
     block_count = (SUPERBLOCK_SIZE - sizeof (superblock)) / block_with_meta_sz;
     next_uninitialized_block_start = ((char*) this + sizeof (superblock));

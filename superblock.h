@@ -10,6 +10,8 @@
 using namespace std;
 
 namespace ghoard {
+    const int SUPERBLOCK_MAGICK = 0xab45cd73;
+
     class heap;
     class superblock;
 
@@ -40,6 +42,7 @@ namespace ghoard {
         superblock * szprev;
         superblock * sznext;
         empty_block * stack_head;
+        int magick;
         size_t block_count;
         size_t block_with_meta_sz;
         void * next_uninitialized_block_start;
@@ -52,6 +55,7 @@ namespace ghoard {
         mutex_lock mutex;
 
     public:
+        void check_magick();
         size_t get_block_with_meta_sz();
         bool has_free_blocks();
         bool is_empty();

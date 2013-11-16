@@ -21,18 +21,18 @@ namespace ghoard {
     }
 
     int get_sz_group(size_t size) {
+        if(size == 0) return -2;
         if (size > BIG_SZ_MAX) return -1;
         if (size > SMALL_SZ_MAX) {
             return SMALL_SZ_CNT + log2_ceil(size) - BIG_SZ_BASE_LOG;
         }
-        size >>= SMALL_SZ_BASE_LOG;
-        if (size == 0) ++size;
         --size;
+        size >>= SMALL_SZ_BASE_LOG;
         return size;
     }
 
     size_t get_block_size(int sz_group) {
-        if(!(sz_group > 0 && sz_group < SZ_CNT)){
+        if(!(sz_group >= 0 && sz_group < SZ_CNT)){
             print("Wrong sz_group!\n");
             std::abort();
         }

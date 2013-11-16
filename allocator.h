@@ -14,7 +14,7 @@ namespace ghoard {
 
     class allocator {
     private:
-
+        
         struct heap_holder_cls {
             heap * heaps;
             heap_holder_cls();
@@ -26,6 +26,7 @@ namespace ghoard {
         static void * allocate_large_block(size_t data_size, size_t alignment = DEFAULT_ALIGNMENT);
 
     public:
+        allocator();
         void * allocate(size_t size, size_t alignment = DEFAULT_ALIGNMENT);
         void deallocate(void * ptr);
         void * reallocate(void * ptr, size_t size);

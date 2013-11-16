@@ -4,9 +4,17 @@
 #include "tracing.h"
 #include <unistd.h>
 #include <sys/mman.h>
+#include <cassert>
 #include <cstddef>
 
 static const bool PRINT_HEAP_TRACE = false;
+
+void ghoard::heap::check_magick(){
+    if(magick != HEAP_MAGICK){
+        print("Bad magick in heap ", this, "\n");
+        std::abort();
+    }
+}
 
 void ghoard::heap::trace_debug(){
     trace("[heap used_bytes=",used_bytes," available_bytes=", available_bytes, " ");
@@ -20,6 +28,7 @@ void ghoard::heap::trace_debug(){
 }
 
 void ghoard::heap::init() {
+    magick = HEAP_MAGICK;
     superblock ** sz_heads = (superblock **) ((char*) this + sizeof(heap));
     this->sz_heads = sz_heads;
     used_bytes = 0;

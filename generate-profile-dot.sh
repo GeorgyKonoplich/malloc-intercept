@@ -1,6 +1,6 @@
 #!/bin/bash
 dir=$(pwd)
-g++ -Wno-unused-result --shared -std=c++0x -fPIC -O2 -o dist/release/libghoard_for_profiler.so allocator.cpp allocator.h constants.h heap.cpp heap.h malloc-intercept.cpp superblock.cpp superblock.h tracing.cpp tracing.h utility.cpp utility.h -lprofiler -L.
+g++ -Wno-unused-result --shared -std=c++0x -fPIC -O2 -o dist/release/libghoard_for_profiler.so allocator.cpp allocator.h constants.h constants.cpp heap.cpp heap.h malloc-intercept.cpp superblock.cpp superblock.h tracing.cpp tracing.h utility.cpp utility.h -lprofiler -L.
 if [ ! -d profile-results ]; then
     mkdir profile-results
 fi

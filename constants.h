@@ -11,18 +11,19 @@ using namespace std;
 
 namespace ghoard {
 
-    const int HEAP_CNT_LOG = log2_ceil(get_processor_count()*2);
-    const int HEAP_CNT = 1<<HEAP_CNT_LOG;
+    extern const int HEAP_CNT_LOG;
+    extern const int HEAP_CNT;
 
     const size_t DEFAULT_ALIGNMENT = 8;
     const size_t K_THRESHOLD = 10;
     const unsigned long long F_THRESHOLD_NUMERATOR = 1;
     const unsigned long long F_THRESHOLD_DENOMINATOR = 4;
 
-    const bool RETURN_SUPERBLOCKS = getenv("GHOARD_RETURN_SUPERBLOCKS") != NULL;
+    extern const bool RETURN_SUPERBLOCKS;
 
-    const size_t PAGE_SIZE = sysconf(_SC_PAGESIZE);
-    const size_t SUPERBLOCK_SIZE = 16 * PAGE_SIZE;
+    extern const size_t PAGE_SIZE;
+    extern const size_t SUPERBLOCK_SIZE;
+
     const int FGROUP_COUNT = 10;
 
     const int SMALL_SZ_BASE_LOG = 3;
@@ -31,11 +32,12 @@ namespace ghoard {
 
     const int SMALL_SZ_CNT = SMALL_SZ_MAX / SMALL_SZ_BASE;
     const size_t BIG_SZ_BASE = SMALL_SZ_MAX * 2;
-    const size_t BIG_SZ_BASE_LOG = log2_floor(BIG_SZ_BASE);
-    const size_t BIG_SZ_MAX = SUPERBLOCK_SIZE / 4;
-    const int BIG_SZ_CNT = log2_floor(BIG_SZ_MAX) - BIG_SZ_BASE_LOG + 1;
+    
+    extern const size_t BIG_SZ_BASE_LOG;
+    extern const size_t BIG_SZ_MAX;
+    extern const int BIG_SZ_CNT;
 
-    const int SZ_CNT = SMALL_SZ_CNT + BIG_SZ_CNT;
+    extern const int SZ_CNT;
 };
 
 #endif
