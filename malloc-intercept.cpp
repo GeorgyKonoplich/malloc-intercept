@@ -104,17 +104,18 @@ int posix_memalign(void** memptr, size_t alignment, size_t size) {
 }
 
 extern "C"
-void *valloc(size_t size) {
+void *memalign(size_t alignment, size_t size) {
     recuirsion_guard rg;
 
-    print("deprecated function valloc is not supported\n");
-    std::abort();
+    void* p = allocator_instance.allocate(size, alignment);
+
+    trace("memalign ", alignment, " ", size, " ", p, "\n");
+
+    return p;
 }
 
 extern "C"
-void *memalign(size_t boundary, size_t size) {
-    recuirsion_guard rg;
-
-    print("deprecated function memalign is not supported\n");
-    std::abort();
+void *valloc(size_t size) {
+    return memalign(sysconf(_SC_PAGESIZE),size);
 }
+
