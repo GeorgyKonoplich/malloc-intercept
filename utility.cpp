@@ -75,7 +75,6 @@ namespace ghoard {
         if( res < 0 ){
             pthread_t pt = pthread_self();
             int id = (int)pt;
-            trace("tid: ", id);
             if(id < 0) id = - ++id;
             int mod = ((1<<mod_log)-1);
             res = id&mod;

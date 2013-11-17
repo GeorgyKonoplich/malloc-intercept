@@ -19,6 +19,7 @@ namespace ghoard {
             heap * heaps;
             heap_holder_cls();
             heap * get_heap(int i);
+            void trace_debug();
             ~heap_holder_cls();
         } heap_holder;
         heap * get_current_heap();
@@ -27,6 +28,7 @@ namespace ghoard {
 
     public:
         allocator();
+        ~allocator();
         void * allocate(size_t size, size_t alignment = DEFAULT_ALIGNMENT);
         void deallocate(void * ptr);
         void * reallocate(void * ptr, size_t size);

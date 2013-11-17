@@ -7,6 +7,8 @@
 #include "utility.h"
 #include "tracing.h"
 
+static const bool PRINT_SUPERBLOCK_TRACE = true;
+
 size_t ghoard::superblock::get_block_with_meta_sz() {
     return block_with_meta_sz;
 }
@@ -23,6 +25,7 @@ void ghoard::superblock::check_magick(){
 }
 
 void ghoard::superblock::init() {
+    if(PRINT_SUPERBLOCK_TRACE) trace("Initializing superblock ", this, "\n");
     magick = SUPERBLOCK_MAGICK;
     block_with_meta_sz = get_block_size(sz_group) + sizeof (ordinary_block);
     block_count = (SUPERBLOCK_SIZE - sizeof (superblock)) / block_with_meta_sz;

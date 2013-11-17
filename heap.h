@@ -42,9 +42,7 @@ namespace ghoard {
         int get_available_bytes();
         int get_used_bytes();
     };
-    const size_t HEAP_SIZE = sizeof (heap) + sizeof (superblock*) * SZ_CNT*FGROUP_COUNT;
-
-
+    extern const size_t HEAP_SIZE;
 }
 
 #endif

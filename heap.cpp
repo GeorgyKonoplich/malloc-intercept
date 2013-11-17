@@ -7,7 +7,11 @@
 #include <cassert>
 #include <cstddef>
 
-static const bool PRINT_HEAP_TRACE = false;
+namespace ghoard{
+    const size_t HEAP_SIZE = sizeof (heap) + sizeof (superblock*) * SZ_CNT*FGROUP_COUNT;
+}
+
+static const bool PRINT_HEAP_TRACE = 1;
 
 void ghoard::heap::check_magick(){
     if(magick != HEAP_MAGICK){
@@ -17,11 +21,13 @@ void ghoard::heap::check_magick(){
 }
 
 void ghoard::heap::trace_debug(){
-    trace("[heap used_bytes=",used_bytes," available_bytes=", available_bytes, " ");
+    trace("[heap ", this, " used_bytes=",used_bytes," available_bytes=", available_bytes, " ");
     for(int i=FGROUP_COUNT-1; i>=0; --i){
         trace("fid=", i, " ");
-        if(fgroup_heads[i] != NULL) trace("head=", fgroup_heads[i], " ", &fgroup_heads[i], " ");
-        for(int j=0; j<SZ_CNT; ++j)if(*get_sz_head(i, j)!=NULL) trace("szh[", j, "]=", *get_sz_head(i, j), " ", get_sz_head(i, j), " ");
+        if(fgroup_heads[i] != NULL) trace("head=", fgroup_heads[i], " ");
+        for(int j=0; j<SZ_CNT; ++j)
+            if(*get_sz_head(i, j)!=NULL)
+                trace("szh[", j, "]=", *get_sz_head(i, j)," ");
         trace("; ");
     }
     trace("\n");
@@ -49,7 +55,9 @@ bool ghoard::heap::is_threshold_passed() {
 }
 
 ghoard::superblock ** ghoard::heap::get_sz_head(int fid, int size_group) {
-    return sz_heads + fid * SZ_CNT + size_group;
+    superblock ** sz_head = sz_heads + fid * SZ_CNT + size_group;
+    //if(PRINT_HEAP_TRACE) trace("[heap=", this, "] [sz_heads=", sz_heads, "] get_sz_head(fid=", fid, ", size_group=", size_group, ") = sz_heads + fid * SZ_CNT + size_group = ", sz_head, "\n");
+    return sz_head;
 }
 
 ghoard::superblock * ghoard::heap::get_deletion_candidate() {
@@ -73,11 +81,11 @@ void ghoard::heap::create_add_superblock(void * bytes, int sz_group) {
     sb->set_list_pointers_to_null();
     sb->mutex.init();
     insert_superblock(sb);
-    if(PRINT_HEAP_TRACE) trace("heap::create_add_superblock(",bytes,", ",sz_group,"): sb->fgroup=", sb->get_fgroup_id(), " -> block_with_meta_sz=", sb->get_block_with_meta_sz(), " block_cnt=", sb->get_block_count(),"\n");
+    if(PRINT_HEAP_TRACE) trace("(finish) [heap ", this, "] create_add_superblock(",bytes,", ",sz_group,"): sb->fgroup=", sb->get_fgroup_id(), " -> block_with_meta_sz=", sb->get_block_with_meta_sz(), " block_cnt=", sb->get_block_count(),"\n");
 }
 
 void ghoard::heap::remove_superblock(superblock * sb) {
-    if(PRINT_HEAP_TRACE) trace("heap::remove_superblock(",sb,")::start: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] remove_superblock(",sb,")::start: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
     if (sb->fprev != NULL) sb->fprev->fnext = sb->fnext;
     if (sb->szprev != NULL) sb->szprev->sznext = sb->sznext;
     if (sb->fnext != NULL) sb->fnext->fprev = sb->fprev;
@@ -94,14 +102,14 @@ void ghoard::heap::remove_superblock(superblock * sb) {
     sb->set_list_pointers_to_null();
     available_bytes -= sb->get_block_count() * block_size;
     used_bytes -= (sb->get_block_count() - sb->free_block_cnt) * block_size;
-    if(PRINT_HEAP_TRACE) trace("heap::remove_superblock(",sb,")::finish used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] remove_superblock(",sb,")::finish used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
 }
 
 void ghoard::heap::insert_superblock(superblock * sb) {
-    if(PRINT_HEAP_TRACE) trace("heap::insert_superblock(",sb,")::start: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] insert_superblock(",sb,")::start: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
     int fid = sb->get_fgroup_id();
 
-    if(PRINT_HEAP_TRACE) trace("-- 1 sb=",sb," fid=",fid," head=",fgroup_heads[fid]," ", &fgroup_heads[fid]," sz_head=",*get_sz_head(fid, sb->sz_group)," ", get_sz_head(fid, sb->sz_group), ",  sb->fnext=",sb->fnext, "\n");
+    if(PRINT_HEAP_TRACE) trace("-- 1 sb=",sb," fid=",fid," head=",fgroup_heads[fid]," sz_head=",*get_sz_head(fid, sb->sz_group),",  sb->fnext=",sb->fnext, "\n");
 
     sb->fprev = NULL;
     sb->fnext = fgroup_heads[fid];
@@ -114,29 +122,28 @@ void ghoard::heap::insert_superblock(superblock * sb) {
     if(*head != NULL) (*head)->szprev = sb;
     *head = sb;
 
-    if(PRINT_HEAP_TRACE) trace("-- 2 sb=",sb," fid=",fid," head=",fgroup_heads[fid]," ", &fgroup_heads[fid]," sz_head=",*get_sz_head(fid, sb->sz_group)," ", get_sz_head(fid, sb->sz_group), ",  sb->fnext=",sb->fnext, "\n");
+    if(PRINT_HEAP_TRACE) trace("-- 2 sb=",sb," fid=",fid," head=",fgroup_heads[fid],*get_sz_head(fid, sb->sz_group), ",  sb->fnext=",sb->fnext, "\n");
+    if(PRINT_HEAP_TRACE) trace("-- superblock: fprev=", sb->fprev, " fnext=", sb->fnext, " szprev=", sb->szprev, " sznext=", sb->sznext, "\n");
     
     size_t block_size = sb->get_block_with_meta_sz();
     available_bytes += sb->get_block_count() * block_size;
     used_bytes += (sb->get_block_count() - sb->free_block_cnt) * block_size;
-    if(PRINT_HEAP_TRACE) trace("heap::insert_superblock(",sb,")::finish: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] insert_superblock(",sb,")::finish: sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
     sb->parent = this;
 }
 
 void ghoard::heap::push_free_block(void * block, superblock * sb) {
-    if(PRINT_HEAP_TRACE) trace("heap::push_free_block(", block,", ", sb, "): sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] push_free_block(", block,", ", sb, "): sb->fgroup=", sb->get_fgroup_id(), " used_bytes=",used_bytes," ", &used_bytes, " available_bytes=", available_bytes, " ", &available_bytes, "\n");
     remove_superblock(sb);
     sb->push_free_block(block);
-    used_bytes -= sb->get_block_with_meta_sz();
     insert_superblock(sb);
 }
 
 void* ghoard::heap::pop_free_block(superblock* sb) {
     remove_superblock(sb);
     void * block = sb->pop_free_block();
-    used_bytes += sb->get_block_with_meta_sz();
     insert_superblock(sb);
-    if(PRINT_HEAP_TRACE) trace("heap::pop_free_block(", sb, "): sb->fgroup=", sb->get_fgroup_id(), " -> ", block, ")\n");
+    if(PRINT_HEAP_TRACE) trace("[heap ", this, "] pop_free_block(", sb, "): sb->fgroup=", sb->get_fgroup_id(), " -> ", block, ")\n");
     return block;
 }
 
@@ -178,4 +185,5 @@ void ghoard::heap::deallocate_all_superblocks(){
             sb = fgroup_heads[i];
         }
     }
+    trace_debug();
 }

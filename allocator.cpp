@@ -12,19 +12,38 @@
 static const bool PRINT_ALLOCATOR_TRACE = 1;
 
 void ghoard::allocator::trace_debug(){
-    trace("[Allocator]\n");
-    heap * global_heap = get_global_heap();
-    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap (", global_heap, ") used bytes=", global_heap->get_used_bytes(), "\n");
-    //if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap (", global_heap, ")\n");
-    //global_heap->trace_debug();
-    //for(int i=0; i<HEAP_CNT+1; ++i) C
+    heap_holder.trace_debug();
+}
+void ghoard::allocator::heap_holder_cls::trace_debug(){
+    trace("\n===== [Heaps] =====\n");
+    for(int i=0; i<HEAP_CNT+1; ++i) {
+        trace("[id=", i, "] ");
+        /* @TODO Figure out, what's going on here.
+         * This function is being called from allocate() method
+         * And if we comment two lines (see comments lower) it failes with
+         * SIG_SEV. Strange thing is that it never should (and does) print
+         * NULL, which means only if's condition is always true. But if comment
+         * those lines, it pretends to be false
+         */
+        heap * _heap = get_heap(i);
+        if(_heap != NULL) //<-- Comment this line
+            _heap->trace_debug();
+        else trace("NULL\n"); //<-- And this
+    }
 }
 
 ghoard::allocator::allocator(){
+    if(PRINT_ALLOCATOR_TRACE) trace("Initializing allocator -- begin\n");
     heap * global_heap = get_global_heap();
-    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, " global_heap used bytes=", global_heap->get_used_bytes(), "\n");
-    //if(PRINT_ALLOCATOR_TRACE) 
-        //trace_debug();
+    if(PRINT_ALLOCATOR_TRACE) 
+        trace_debug();
+    if(PRINT_ALLOCATOR_TRACE) trace("Initializing allocator -- end\n");
+}
+
+ghoard::allocator::~allocator(){
+    if(PRINT_ALLOCATOR_TRACE) 
+        trace_debug();
+    if(PRINT_ALLOCATOR_TRACE) trace("Finalizing allocator\n");
 }
 
 ghoard::allocator::heap_holder_cls::heap_holder_cls() {
@@ -36,10 +55,13 @@ ghoard::allocator::heap_holder_cls::heap_holder_cls() {
 }
 
 ghoard::allocator::heap_holder_cls::~heap_holder_cls(){
-    for (int i=0; i<HEAP_CNT+1; ++i){
-        get_heap(i)->deallocate_all_superblocks();
-    }
-    raw_deallocate(heaps, HEAP_SIZE * (1 + HEAP_CNT));
+    if(PRINT_ALLOCATOR_TRACE) trace("Finalizing heap holder -- begin\n");
+    //for (int i=0; i<HEAP_CNT+1; ++i){
+        //get_heap(i)->deallocate_all_superblocks();
+    //}
+    trace_debug();
+    //raw_deallocate(heaps, HEAP_SIZE * (1 + HEAP_CNT));
+    if(PRINT_ALLOCATOR_TRACE) trace("Finalizing heap holder -- end\n");
 }
 
 ghoard::heap * ghoard::allocator::heap_holder_cls::get_heap(int i) {
@@ -56,14 +78,13 @@ bool ghoard::allocator::is_empty(){
 
 void * ghoard::allocator::allocate(size_t data_size, size_t alignment) {
     if(PRINT_ALLOCATOR_TRACE) trace("allocator.allocate(",data_size, ", ", alignment, ")\n");
-    if(PRINT_ALLOCATOR_TRACE) trace("allocator's heaps: ", heap_holder.heaps, "\n");
     if(PRINT_ALLOCATOR_TRACE) trace_debug();
     size_t ordinary_size = data_size + sizeof(ordinary_block) + alignment - 1;
     if (ordinary_size > BIG_SZ_MAX) {
         return allocate_large_block(data_size, alignment);
     }
-    int sz_group = get_sz_group(ordinary_size);
     heap * global_heap = get_global_heap();
+    int sz_group = get_sz_group(ordinary_size);
     global_heap->check_magick();
     heap * current_heap = get_current_heap();
     current_heap->check_magick();
@@ -156,6 +177,7 @@ void ghoard::allocator::deallocate(void * ptr) {
         parent_heap->unlock();
         sb->unlock();
     }
+    if(PRINT_ALLOCATOR_TRACE) trace_debug();
 }
 
 ghoard::heap * ghoard::allocator::get_global_heap() {
